@@ -111,3 +111,25 @@ class TestResumo:
         gerenciador.concluir(1)
         r = resumo(gerenciador)
         assert r == {"total": 3, "pendentes": 2, "concluidas": 1}
+
+
+# ---------------------------------------------------------------------- #
+# Caminho configurável (Docker / variável de ambiente)
+# ---------------------------------------------------------------------- #
+class TestCaminhoConfiguravel:
+    def test_arquivo_via_variavel_de_ambiente(self, tmp_path, monkeypatch):
+        destino = tmp_path / "dados" / "tarefas.json"
+        destino.parent.mkdir()
+        monkeypatch.setenv("TAREFAS_ARQUIVO", str(destino))
+        # importar dinamicamente para ler a variável no momento do import
+        import importlib
+
+        import gerenciador as modulo
+
+        importlib.reload(modulo)
+        gerenciador_local = modulo.GerenciadorDeTarefas()
+        gerenciador_local.adicionar("Tarefa no container")
+        assert destino.exists()
+        assert json.loads(destino.read_text(encoding="utf-8"))[0]["titulo"] == (
+            "Tarefa no container"
+        )
