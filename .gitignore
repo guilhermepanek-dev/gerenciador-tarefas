@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Testes / cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dados locais (não versionar tarefas do usuário)
+tarefas.json
