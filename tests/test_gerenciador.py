@@ -133,3 +133,73 @@ class TestCaminhoConfiguravel:
         assert json.loads(destino.read_text(encoding="utf-8"))[0]["titulo"] == (
             "Tarefa no container"
         )
+
+
+# ---------------------------------------------------------------------- #
+# Semana 6 — novos testes unitários (executados a cada commit de PR)
+# ---------------------------------------------------------------------- #
+class TestAdicionarCasosExtras:
+    def test_adicionar_tarefa_ja_concluida(self, gerenciador):
+        tarefa = gerenciador.adicionar("Configurar alertas", concluida=True)
+        assert tarefa["concluida"] is True
+        assert gerenciador.listar("concluidas") == [tarefa]
+
+    def test_adicionar_titulo_none_dispara_erro(self, gerenciador):
+        with pytest.raises(ValueError):
+            gerenciador.adicionar(None)
+
+    def test_adicionar_titulo_com_emoji_e_unicode(self, gerenciador):
+        tarefa = gerenciador.adicionar("🐳 Dockerizar a aplicação")
+        assert tarefa["titulo"] == "🐳 Dockerizar a aplicação"
+        recarregado = GerenciadorDeTarefas(arquivo=gerenciador.arquivo)
+        assert recarregado.listar()[0]["titulo"] == "🐳 Dockerizar a aplicação"
+
+    def test_adicionar_titulo_muito_longo_e_aceito(self, gerenciador):
+        longo = "DevOps" * 50  # 300 caracteres, sem espaços nas pontas
+        tarefa = gerenciador.adicionar(longo)
+        assert tarefa["titulo"] == longo
+
+
+class TestRemover:
+    def test_remover_tarefa_existente(self, gerenciador):
+        gerenciador.adicionar("Tarefa 1")
+        gerenciador.adicionar("Tarefa 2")
+        assert gerenciador.remover(1) is True
+        titulos = [t["titulo"] for t in gerenciador.listar()]
+        assert titulos == ["Tarefa 2"]
+
+    def test_remover_tarefa_inexistente_retorna_false(self, gerenciador):
+        assert gerenciador.remover(42) is False
+
+    def test_proximo_id_apos_remover_usa_maior_id_restante(self, gerenciador):
+        gerenciador.adicionar("A")  # id 1
+        gerenciador.adicionar("B")  # id 2
+        gerenciador.remover(2)      # resta apenas o id 1
+        nova = gerenciador.adicionar("C")
+        # _proximo_id() = maior id restante + 1 = 2
+        assert nova["id"] == 2
+
+
+class TestBordasPersistencia:
+    def test_arquivo_com_json_valido_mas_nao_lista(self, tmp_path):
+        arquivo = tmp_path / "tarefas.json"
+        arquivo.write_text('{"tarefas": "não é lista"}', encoding="utf-8")
+        gerenciador = GerenciadorDeTarefas(arquivo=arquivo)
+        assert gerenciador.listar() == []
+
+    def test_listar_retorna_copia_da_lista_interna(self, gerenciador):
+        gerenciador.adicionar("Original")
+        copia = gerenciador.listar()
+        copia.append({"id": 99, "titulo": "Intrusa", "concluida": False})
+        assert len(gerenciador.listar()) == 1
+
+
+class TestResumoCasosExtras:
+    def test_resumo_sem_tarefas(self, gerenciador):
+        assert resumo(gerenciador) == {"total": 0, "pendentes": 0, "concluidas": 0}
+
+    def test_concluir_persiste_no_disco(self, gerenciador, tmp_path):
+        gerenciador.adicionar("Escrever testes unitários")
+        gerenciador.concluir(1)
+        novo = GerenciadorDeTarefas(arquivo=tmp_path / "tarefas.json")
+        assert novo.listar()[0]["concluida"] is True
