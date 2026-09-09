@@ -65,6 +65,30 @@ python main.py resumo
 python -m pytest tests/ -v
 ```
 
+## Docker
+
+A aplicação é executada diretamente em um container Docker (veja o
+`Dockerfile`, baseado no [guia oficial do Docker para
+Python](https://docs.docker.com/language/python/)):
+
+```bash
+# Construir a imagem
+docker build -t gerenciador-tarefas .
+
+# Executar a CLI dentro do container (sem persistência)
+docker run --rm gerenciador-tarefas --help
+
+# Executar com volume persistente (as tarefas são mantidas entre execuções)
+docker volume create tarefas-data
+docker run --rm -v tarefas-data:/app/data gerenciador-tarefas adicionar "Minha tarefa"
+docker run --rm -v tarefas-data:/app/data gerenciador-tarefas listar
+docker run --rm -v tarefas-data:/app/data gerenciador-tarefas resumo
+```
+
+Dentro do container, o arquivo de tarefas fica em `/app/data/tarefas.json`,
+configurável pela variável de ambiente `TAREFAS_ARQUIVO`. O workflow de CI
+também valida o build da imagem Docker em cada pull request.
+
 ## Estrutura do projeto
 
 ```
