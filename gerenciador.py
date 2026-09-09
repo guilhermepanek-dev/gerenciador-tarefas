@@ -5,9 +5,12 @@ listar, concluir e remover tarefas via linha de comando.
 """
 
 import json
+import os
 from pathlib import Path
 
-ARQUIVO_PADRAO = Path("tarefas.json")
+# Caminho do arquivo de tarefas configurável via variável de ambiente
+# (útil para containers Docker e volumes persistidos).
+ARQUIVO_PADRAO = Path(os.environ.get("TAREFAS_ARQUIVO", "tarefas.json"))
 
 
 class GerenciadorDeTarefas:
