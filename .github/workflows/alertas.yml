@@ -1,0 +1,55 @@
+# Alertas do repositório via Telegram
+# Dispara um alerta a cada commit (push) em qualquer branch,
+# com destaque especial quando o push é um merge na branch main.
+# As credenciais ficam nos secrets do repositório:
+#   TELEGRAM_BOT_TOKEN  -> token do bot (criado no @BotFather)
+#   TELEGRAM_CHAT_ID    -> id do chat (grupo/canal) que recebe os alertas
+
+name: Alertas
+
+on:
+  push:                # alerta a cada commit
+  workflow_dispatch:   # permite disparar manualmente (bom para testar)
+
+jobs:
+  telegram:
+    name: Enviar alerta para o Telegram
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar alerta de commit para o Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.event.repository.full_name }}
+          REF: ${{ github.ref_name }}
+          AUTOR: ${{ github.actor }}
+          SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          EXECUCAO: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
+        run: |
+          SHA_CURTO=$(echo "$SHA" | cut -c1-7)
+          PRIMEIRA_LINHA=$(echo "$COMMIT_MSG" | head -n 1 | cut -c1-80)
+          if [ "$REF" = "main" ]; then
+            CABECALHO="✅ MERGE na branch main — gerenciador-tarefas"
+          else
+            CABECALHO="🔧 Novo commit em $REF — gerenciador-tarefas"
+          fi
+          MENSAGEM=$(printf '%s\n%s\n%s\n%s\n%s' \
+            "$CABECALHO" \
+            "👤 Autor: $AUTOR" \
+            "💬 Commit: $PRIMEIRA_LINHA ($SHA_CURTO)" \
+            "📦 Repositório: https://github.com/$REPO" \
+            "⚙️ Execução: $EXECUCAO")
+          echo "--- Mensagem que será enviada ---"
+          echo "$MENSAGEM"
+          echo "-------------------------"
+          RESPOSTA=$(curl -sS -X POST \
+            "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$CHAT_ID" \
+            --data-urlencode "text=$MENSAGEM" \
+            --data-urlencode "disable_web_page_preview=true")
+          echo "--- Resposta da API do Telegram ---"
+          echo "$RESPOSTA" | jq .
+          # Se o Telegram recusar o envio, o job falha:
+          # o alerta faz parte do pipeline e deve ser entregue.
+          echo "$RESPOSTA" | jq -e '.ok == true' > /dev/null
