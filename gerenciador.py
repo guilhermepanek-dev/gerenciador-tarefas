@@ -54,9 +54,26 @@ class GerenciadorDeTarefas:
         self._salvar()
         return tarefa
 
-    def listar(self):
-        """Lista todas as tarefas."""
+    def listar(self, filtro=None):
+        """Lista tarefas.
+
+        filtro=None -> todas; 'pendentes' -> não concluídas;
+        'concluidas' -> concluídas.
+        """
+        if filtro == "pendentes":
+            return [t for t in self.tarefas if not t["concluida"]]
+        if filtro == "concluidas":
+            return [t for t in self.tarefas if t["concluida"]]
         return list(self.tarefas)
+
+    def concluir(self, id_tarefa):
+        """Marca uma tarefa como concluída. Retorna True/False."""
+        for t in self.tarefas:
+            if t["id"] == id_tarefa:
+                t["concluida"] = True
+                self._salvar()
+                return True
+        return False
 
     # ------------------------------------------------------------------ #
     # Auxiliares

@@ -63,3 +63,27 @@ class TestPersistencia:
         assert gerenciador.listar() == []
 
 
+# ---------------------------------------------------------------------- #
+# Listar / filtrar
+# ---------------------------------------------------------------------- #
+class TestListar:
+    def test_listar_vazio(self, gerenciador):
+        assert gerenciador.listar() == []
+
+    def test_filtro_pendentes(self, gerenciador):
+        gerenciador.adicionar("Pendente 1")
+        gerenciador.adicionar("Pendente 2")
+        gerenciador.concluir(1)
+        pendentes = gerenciador.listar("pendentes")
+        assert len(pendentes) == 1
+        assert pendentes[0]["titulo"] == "Pendente 2"
+
+    def test_filtro_concluidas(self, gerenciador):
+        gerenciador.adicionar("Tarefa 1")
+        gerenciador.adicionar("Tarefa 2")
+        gerenciador.concluir(2)
+        concluidas = gerenciador.listar("concluidas")
+        assert len(concluidas) == 1
+        assert concluidas[0]["id"] == 2
+
+
