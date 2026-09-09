@@ -203,3 +203,9 @@ class TestResumoCasosExtras:
         gerenciador.concluir(1)
         novo = GerenciadorDeTarefas(arquivo=tmp_path / "tarefas.json")
         assert novo.listar()[0]["concluida"] is True
+
+    def test_concluir_duas_vezes_mantem_concluida(self, gerenciador):
+        gerenciador.adicionar("Merge na main")
+        assert gerenciador.concluir(1) is True
+        assert gerenciador.concluir(1) is True  # idempotente
+        assert gerenciador.listar()[0]["concluida"] is True
