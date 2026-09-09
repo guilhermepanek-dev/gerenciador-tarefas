@@ -98,3 +98,11 @@ class GerenciadorDeTarefas:
         if not self.tarefas:
             return 1
         return max(t["id"] for t in self.tarefas) + 1
+
+
+def resumo(gerenciador):
+    """Retorna um resumo (total, pendentes, concluídas)."""
+    total = len(gerenciador.listar())
+    concluidas = len(gerenciador.listar("concluidas"))
+    pendentes = len(gerenciador.listar("pendentes"))
+    return {"total": total, "pendentes": pendentes, "concluidas": concluidas}

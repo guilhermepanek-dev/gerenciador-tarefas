@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from gerenciador import GerenciadorDeTarefas
+from gerenciador import GerenciadorDeTarefas, resumo
 
 
 @pytest.fixture
@@ -100,3 +100,14 @@ class TestConcluir:
         assert gerenciador.concluir(999) is False
 
 
+# ---------------------------------------------------------------------- #
+# Resumo
+# ---------------------------------------------------------------------- #
+class TestResumo:
+    def test_resumo_conta_corretamente(self, gerenciador):
+        gerenciador.adicionar("A")
+        gerenciador.adicionar("B")
+        gerenciador.adicionar("C")
+        gerenciador.concluir(1)
+        r = resumo(gerenciador)
+        assert r == {"total": 3, "pendentes": 2, "concluidas": 1}
