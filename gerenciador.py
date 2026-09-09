@@ -1,6 +1,7 @@
 """Gerenciador de Tarefas (CLI) — módulo principal.
 
-Armazena tarefas em um arquivo JSON local.
+Armazena tarefas em um arquivo JSON local, permitindo adicionar,
+listar, concluir e remover tarefas via linha de comando.
 """
 
 import json
@@ -75,9 +76,24 @@ class GerenciadorDeTarefas:
                 return True
         return False
 
+    def remover(self, id_tarefa):
+        """Remove uma tarefa pelo id. Retorna True/False."""
+        tarefa = self._buscar(id_tarefa)
+        if tarefa is None:
+            return False
+        self.tarefas.remove(tarefa)
+        self._salvar()
+        return True
+
     # ------------------------------------------------------------------ #
     # Auxiliares
     # ------------------------------------------------------------------ #
+    def _buscar(self, id_tarefa):
+        for t in self.tarefas:
+            if t["id"] == id_tarefa:
+                return t
+        return None
+
     def _proximo_id(self):
         if not self.tarefas:
             return 1

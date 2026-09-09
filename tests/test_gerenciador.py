@@ -87,3 +87,16 @@ class TestListar:
         assert concluidas[0]["id"] == 2
 
 
+# ---------------------------------------------------------------------- #
+# Concluir
+# ---------------------------------------------------------------------- #
+class TestConcluir:
+    def test_concluir_tarefa_existente(self, gerenciador):
+        gerenciador.adicionar("Fazer o PR")
+        assert gerenciador.concluir(1) is True
+        assert gerenciador.listar()[0]["concluida"] is True
+
+    def test_concluir_tarefa_inexistente(self, gerenciador):
+        assert gerenciador.concluir(999) is False
+
+
